@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COMPIQ Mood Tracker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      color: #333;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(-45deg, #2196f3, #9c27b0, #e91e63, #ff9800, #673ab7);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      color: #fff;
+      font-size: 1.2em;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(100vh); opacity: 0; }
+    }
+
+    img.logo {
+      width: 120px;
+      margin: 10px auto;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin: 10px 0;
+    }
+
+    h2 {
+      font-size: 1.3em;
+      margin: 5px 0;
+    }
+
+    p {
+      font-size: 0.95em;
+      margin: 5px 0 15px;
+    }
+
+    .mood-button {
+      margin: 3px;
+      padding: 6px 8px;
+      border: none;
+      border-radius: 8px;
+      background-color: #fff;
+      color: #333;
+      font-size: 0.81em;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.2s;
+      display: inline-block;
+      width: calc(95% / 8 - 16px);
+      box-sizing: border-box;
+    }
+
+    .mood-button:hover {
+      transform: scale(1.05);
+      background-color: #ffd700;
+    }
+
+    #message-area {
+      margin-top: 25px;
+      padding: 20px;
+      background-color: #fff4d2;
+      border-radius: 12px;
+      display: none;
+    }
+
+    .controls {
+      margin-top: 20px;
+    }
+
+    audio {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <img src="company-logo.png" alt="Company Logo" class="logo" />
+  <h1>How are you today?</h1>
+  <h2>What's your mood like?</h2>
+  <p>(You can choose up to 3 moods that best describe how you're feeling today!)</p>
+
+  <div class="controls">
+    <button onclick="toggleMusic()">Play/Pause Music</button>
+  </div>
+
+  <div id="buttons"></div>
+
+  <div id="message-area">
+    <h2 id="mood-title"></h2>
+    <p id="mood-message"></p>
+    <p><strong>Tip:</strong> <span id="mood-tip"></span></p>
+  </div>
+
+  <audio id="background-music" autoplay loop>
+    <source src="background.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <script>
+    // Snowflakes
+    for (let i = 0; i < 50; i++) {
+      const snowflake = document.createElement('div');
+      snowflake.classList.add('snowflake');
+      snowflake.style.left = Math.random() * 100 + 'vw';
+      snowflake.style.animationDuration = (Math.random() * 5 + 5) + 's';
+      snowflake.innerText = '❄';
+      document.body.appendChild(snowflake);
+    }
+
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxVX4BmbLEBa2MfOVuVAB4bs5d-4jTzNL95Y-8JhbHLDT6kDlkfoV8CbCtTNIuFKmuuOA/exec";
+    const userName = prompt("Please enter your name (or nickname):");
+
+    const moods = [
+      {word: "Hopeful 🌟", message: "You’re looking ahead with light in your heart. Keep that fire alive—good things are coming.", tip: "Write down one thing you're looking forward to."},
+      {word: "Stressed 😣", message: "You're carrying a lot today. Be kind to yourself and take things one breath at a time.", tip: "Step away from your screen for 5 mins."},
+      {word: "Grateful 💖", message: "Gratitude makes the heart fuller. Share your thanks—it lifts others too.", tip: "Message someone and thank them sincerely."},
+      {word: "Motivated 🚀", message: "You’ve got energy and purpose—go channel it into something amazing!", tip: "Tackle that top task now while you’re fired up."},
+      {word: "Happy 😄", message: "That joy is beautiful—share the good vibes today!", tip: "Smile at someone or tell a teammate they’re awesome."},
+      {word: "Lost 🧭", message: "It’s okay not to have all the answers. Keep going—you’re not alone.", tip: "Ask for clarity or take a moment to reflect."},
+      {word: "Inspired ✨", message: "That spark means something! Capture it before it fades.", tip: "Jot your ideas down—you never know where they’ll lead."},
+      {word: "Frustrated 😤", message: "Ugh, tough day? You're allowed to feel this. Just don’t unpack and stay there.", tip: "Walk around or breathe deeply for 2 minutes."},
+      {word: "Confident 💪", message: "Yes, you’ve got this. Your confidence lifts everyone around you too.", tip: "Speak up in a meeting or help someone struggling."},
+      {word: "Excited 🎉", message: "That thrill is contagious—spread the fun!", tip: "Use this energy to push a task forward."},
+      {word: "Overwhelmed 😰", message: "Too much at once? Pause. Prioritize. You don’t have to do it all now.", tip: "Write down 3 urgent tasks only."},
+      {word: "Creative 🎨", message: "You’re in the zone! Build something today, even if it’s small.", tip: "Sketch, write, or brainstorm while the flow lasts."},
+      {word: "Relaxed 😌", message: "Savor that peace—you’ve earned it.", tip: "Help others slow down too with your calm presence."},
+      {word: "Grumpy 😡", message: "No judgment—it happens. Try not to pass it on.", tip: "Take a sip of water and a big breath."},
+      {word: "Curious 🧐", message: "Stay hungry, stay foolish. Curiosity keeps us growing.", tip: "Ask a teammate about something new today."},
+      {word: "Focused 🎯", message: "Laser mode: ON. Protect this focus—it’s powerful!", tip: "Silence notifications for 30 minutes."},
+      {word: "Determined 💪", message: "You’re on a mission. Nothing’s stopping you now.", tip: "Push through one challenge today—you’ve got this."},
+      {word: "Productive ⚙️", message: "You’re on a roll! Productivity is a mix of focus and flow—and you’ve tapped into both.", tip: "Mark your progress somewhere visible—it keeps the fire alive."},
+      {word: "Burnt Out 🔥", message: "You're running on fumes—and that's your signal to pause.", tip: "Unplug for 10 minutes and stretch your body—seriously."},
+      {word: "Appreciated 🌼", message: "That warm feeling? That’s what being valued feels like.", tip: "Pay it forward. Appreciate someone else today—it multiplies."},
+      {word: "Under Pressure 🧨", message: "Deadlines, expectations, noise—it’s a lot. But pressure makes diamonds.", tip: "Break the task into 3 parts. Start with the easiest one."},
+      {word: "Energetic ⚡", message: "You’re buzzing with energy and drive!", tip: "Choose the task you’ve been avoiding. Now’s the time."},
+      {word: "Disconnected 🔌", message: "Feeling out of sync? We all unplug sometimes—what matters is how we reconnect.", tip: "Ping someone with a quick 'Hey'—small connections go far."},
+      {word: "Team Player 🤝", message: "Your support lifts the team in ways you don’t always see.", tip: "Offer help to someone today, even just a quick check-in."},
+      {word: "Underestimated 🐢", message: "You’re quietly building power they can’t see yet.", tip: "List 3 things you’ve accomplished this month—own it."},
+      {word: "Empowered 🦸", message: "You’re claiming your space—and it shows.", tip: "Speak up in a meeting or drop your idea into the team chat."},
+      {word: "Behind Schedule 🕒", message: "Falling behind doesn’t mean failing.", tip: "Set a 15-minute timer and start with the most doable task."},
+      {word: "On Track 🛤️", message: "You’re moving steadily toward your goals.", tip: "Give yourself a small reward at the end of the day."},
+      {word: "Juggling Tasks 🤹", message: "So much to do—but look at you, making it happen.", tip: "Pause. Rank tasks: Must-Do, Should-Do, Can-Wait."},
+      {word: "Celebrating 🎊", message: "Victory feels good, right? Whether big or small—you earned it.", tip: "Share your win with someone who’ll cheer with you."},
+      {word: "Quietly Winning 🐱‍🏍", message: "You don’t need a spotlight to shine. Quiet wins count too.", tip: "Take a moment to journal one win from today."},
+      {word: "Overthinking 🤯", message: "You care—that’s why you spiral sometimes. But not everything needs solving now.", tip: "Write your thoughts down. Choose one to tackle."},
+      {word: "Needing Feedback 🗣️", message: "You want to grow—and that’s admirable.", tip: "Ask one person, 'What’s one thing I could improve?'"},
+      {word: "Ready to Lead 👑", message: "Leadership starts with mindset, not titles.", tip: "Lead a small task or conversation today. Own it."},
+      {word: "Doing My Best 💯", message: "You may not feel perfect, but you’re showing up—and that’s everything.", tip: "Say this: 'I am enough today. I did my best.'"},
+      {word: "Needing a Break 🧘", message: "A pause isn’t lazy—it’s preparation.", tip: "Step away for 5 minutes, drink water, and breathe deeply."}
+    ];
+
+    const buttonsDiv = document.getElementById('buttons');
+    const messageArea = document.getElementById('message-area');
+    const moodTitle = document.getElementById('mood-title');
+    const moodMessage = document.getElementById('mood-message');
+    const moodTip = document.getElementById('mood-tip');
+    let clickCount = 0;
+
+    moods.forEach((mood) => {
+      const btn = document.createElement('button');
+      btn.innerText = mood.word;
+      btn.className = 'mood-button';
+      btn.onclick = () => {
+        if (clickCount < 3) {
+          moodTitle.innerText = mood.word;
+          moodMessage.innerText = mood.message;
+          moodTip.innerText = mood.tip;
+          messageArea.style.display = 'block';
+          clickCount++;
+
+          // Save mood and name to Google Sheets
+          fetch(scriptURL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: userName,
+              mood: mood.word,
+              timestamp: new Date().toLocaleString()
+            })
+          });
+        } else {
+          moodTitle.innerText = "💬 You've reflected beautifully!";
+          moodMessage.innerText = "Thanks for checking in. Your feelings matter and your growth is inspiring. Keep being amazing! ✨";
+          moodTip.innerText = "Now go spread that good energy!";
+        }
+      };
+      buttonsDiv.appendChild(btn);
+    });
+
+    function toggleMusic() {
+      const audio = document.getElementById('background-music');
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    }
+  </script>
+</body>
+</html>
